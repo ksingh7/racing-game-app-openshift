@@ -2,6 +2,7 @@ Racing Game app on OpenShift
 ========================
 ## Installation
 Steps to deploy on openshift
+asdf
 ```
 ```
 
