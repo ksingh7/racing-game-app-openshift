@@ -1,15 +1,8 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <title>HexGL by BKcore</title>
+    <title>Racing Game @ Ksingh</title>
     <meta charset="utf-8">
-    <meta name="description" content="HexGL is a futuristic racing game built by Thibaut Despoulain (BKcore) using HTML5, Javascript and WebGL. Come challenge your friends on this fast-paced 3D game!">
-    <meta property="og:title" content="HexGL, the HTML5 futuristic racing game." />
-    <meta property="og:type" content="game" />
-    <meta property="og:url" content="http://hexgl.bkcore.com/" />
-    <meta property="og:image" content="http://hexgl.bkcore.com/image.png" />
-    <meta property="og:site_name" content="HexGL by BKcore" />
-    <meta property="fb:admins" content="1482017639" />
     <link rel="icon" href="https://i0.wp.com/rhad.info/wp-content/uploads/2019/05/favicon-2.png" type="image/png">
     <link rel="shortcut icon" href="https://i0.wp.com/rhad.info/wp-content/uploads/2019/05/favicon-2.png" type="image/png">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
@@ -29,17 +22,14 @@
         width: 100%;
       }
     </style>
-    <script type="text/javascript">
-    //analytics
-    var _gaq = _gaq || [];
-    _gaq.push(['_setAccount', 'UA-26274524-4']);
-    _gaq.push(['_trackPageview']);
-    (function() {
-      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-    })();
-    </script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-213571785-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-213571785-1');
+</script>
   </head>
 
   <body>
@@ -53,7 +43,8 @@
           <div id="s-controlType">Controls: Keyboard</div>
           <div id="s-quality">Quality: High</div>
           <div id="s-hud">HUD: On</div>
-          <div id="s-godmode" style="display: none">Godmode: Off</div>
+          <!-- <div id="s-godmode" style="display: none">Godmode: Off</div> -->
+          <div id="s-godmode">Godmode: Off</div>
           <div id="s-credits">Credits</div>
         </div>
       </div>
@@ -74,6 +65,7 @@
     </div>
     <div id="credits" style="display: none">
       <h3>Code</h3>
+      <p><b>Re-engineered by</b><br>Karan Singh (karan@redhat.com) <a href="https://www.linkedin.com/in/karansingh7/">LinkedIn</a> <a href="https://github.com/ksingh7/racing-game-app-openshift">GitHub</a></p>
       <p><b>Concept and Development</b><br>Thibaut Despoulain (BKcore)</p>
       <p><b>Contributors</b><br>townxelliot<br>mahesh.kk</p>
       <p><b>Technologies</b><br>WebGL<br>JavaScript<br>CoffeeScript<br>Three.js<br>LeapMotion</p>
