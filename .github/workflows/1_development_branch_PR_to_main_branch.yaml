@@ -1,0 +1,68 @@
+name: Deploy the code coming from Pull Request (before PR merge)
+
+on:
+  pull_request:
+    branches:
+    - main
+env:
+  ENV: "dev"
+  QUAY_DOCKER_USERNAME: ${{ secrets.QUAY_DOCKER_USERNAME }}
+  QUAY_DOCKER_PASSWORD: ${{ secrets.QUAY_DOCKER_PASSWORD }}
+  QUAY_PULL_SECRET: ${{ secrets.QUAY_DOCKER_CONFIIG_JSON_PULL_SECRET}}
+  QUAY_CONTAINER_REGISTRY: ${{ secrets.QUAY_CONTAINER_REGISTRY}} # use "docker.io" for docker hub 
+  OPENSHIFT_SERVER_URL: ${{ secrets.OPENSHIFT_DEV_SERVER_URL}}
+  OPENSHIFT_TOKEN: ${{ secrets.OPENSHIFT_DEV_TOKEN }}
+  OPENSHIFT_NAMESPACE: ${{ secrets.OPENSHIFT_DEV_NAMESPACE }}
+
+jobs:
+  pull_request_workflow:
+    name: Deploy the code coming from Pull Request (before PR merge)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v2
+
+      - name: Update SHA
+        run: echo $GITHUB_SHA > $GITHUB_WORKSPACE/_meta
+
+      - uses: satackey/action-docker-layer-caching@v0.0.11
+        continue-on-error: true
+
+      - name: Build container image
+        run: docker build -t ${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}/racing-game-app-openshift:$(echo $GITHUB_SHA | head -c7) .
+
+      - name: Docker Login
+        run: docker login -u ${{ env.QUAY_DOCKER_USERNAME }} -p ${{ env.QUAY_DOCKER_PASSWORD }} ${{ env.QUAY_CONTAINER_REGISTRY }}
+
+      - name: Push image to Docker Hub
+        run: docker push ${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}/racing-game-app-openshift:$(echo $GITHUB_SHA | head -c7)
+
+      - name: Update deployment file with Image name
+        run:  TAG=$(echo $GITHUB_SHA | head -c7) && sed -i 's|<IMAGE>|${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}/racing-game-app-openshift:'${TAG}'|' $GITHUB_WORKSPACE/deploy-to-openshift.yaml
+
+      - name: Update deployment file with image registry secret
+        run: sed -i 's|<REGISTRY_SECRET>|${{ env.QUAY_DOCKER_CONFIIG_JSON_PULL_SECRET}}|' $GITHUB_WORKSPACE/deploy-to-openshift.yaml
+
+      - name: Authenticate and set context
+        uses: redhat-actions/oc-login@v1
+        with:
+          openshift_server_url: ${{ env.OPENSHIFT_SERVER_URL }}
+          openshift_token: ${{ env.OPENSHIFT_TOKEN }}
+          namespace: ${{ env.OPENSHIFT_NAMESPACE }}
+
+      - name: Deploy to openshift
+        run: oc apply -f deploy-to-openshift.yaml
+
+      - name: Get OpenShift Route name
+        run: echo ::set-output name=route_name::$(oc get route gha-python-app -o jsonpath='{.spec.host}')
+        id: openshift_route_name
+
+      - name: Add a comment to PR
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            Code has been deployed on OpenShift , here is the link to application endpoint http://${{ steps.openshift_route_name.outputs.route_name}}
+          reactions: rocket
+
+          

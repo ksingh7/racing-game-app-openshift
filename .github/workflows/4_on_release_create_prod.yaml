@@ -1,0 +1,54 @@
+name: Deploy the code to K8s production environment when a new release is created
+
+on:
+  release:
+    types:
+    - created
+env:
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+  QUAY_PULL_SECRET: ${{ secrets.QUAY_PULL_SECRET }}
+  OPENSHIFT_SERVER_URL: ${{ secrets.OPENSHIFT_SERVER_URL }}
+  OPENSHIFT_TOKEN: ${{ secrets.OPENSHIFT_PROD_TOKEN }}
+  OPENSHIFT_NAMESPACE: ${{ secrets.OPENSHIFT_PROD_NAMESPACE }}
+  REGISTRY_URL: "quay.io" # use "docker.io" for docker hub 
+  ENV: "dev"
+
+jobs:
+  pull_request_workflow:
+    name: Deploy the code coming from Pull Request (before PR merge)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v2
+
+      - name: Update SHA
+        run: echo $GITHUB_SHA > $GITHUB_WORKSPACE/_meta
+
+      - uses: satackey/action-docker-layer-caching@v0.0.11
+        continue-on-error: true
+
+      - name: Build container image
+        run: docker build -t ${{ env.REGISTRY_URL }}/karansingh/racing-game-app-openshift:$(echo $GITHUB_SHA | head -c7) .
+
+      - name: Docker Login
+        run: docker login -u ${{ env.DOCKER_USERNAME }} -p ${{ env.DOCKER_PASSWORD }} ${{ env.REGISTRY_URL }}
+
+      - name: Push image to Docker Hub
+        run: docker push ${{ env.REGISTRY_URL }}/karansingh/racing-game-app-openshift:$(echo $GITHUB_SHA | head -c7)
+
+      - name: Update deployment file with Image name
+        run:  TAG=$(echo $GITHUB_SHA | head -c7) && sed -i 's|<IMAGE>|${{ env.REGISTRY_URL }}/karansingh/racing-game-app-openshift:'${TAG}'|' $GITHUB_WORKSPACE/deploy-to-openshift.yaml
+
+      - name: Update deployment file with image registry secret
+        run: sed -i 's|<REGISTRY_SECRET>|${{ env.QUAY_PULL_SECRET }}|' $GITHUB_WORKSPACE/deploy-to-openshift.yaml
+
+      - name: Authenticate and set context
+        uses: redhat-actions/oc-login@v1
+        with:
+          openshift_server_url: ${{ env.OPENSHIFT_SERVER_URL }}
+          openshift_token: ${{ env.OPENSHIFT_TOKEN }}
+          namespace: ${{ env.OPENSHIFT_NAMESPACE }}
+
+      - name: Deploy to openshift
+        run: oc apply -f deploy-to-openshift.yaml 

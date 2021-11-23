@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: image-registry-secret
+data:
+  .dockerconfigjson: <REGISTRY_SECRET>
+type: kubernetes.io/dockerconfigjson
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: racing-game-app-openshift
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 8080
+  selector:
+    app: racing-game-app-openshift
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: racing-game-app-openshift
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: racing-game-app-openshift
+  template:
+    metadata:
+      labels:
+        app: racing-game-app-openshift
+    spec:
+      imagePullSecrets:
+      - name: image-registry-secret
+      containers:
+        - name: racing-game-app-openshift
+          image: <IMAGE>
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "300m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          ports:
+            - containerPort: 8080
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: racing-game-app-openshift
+spec:
+  port:
+    targetPort: 8080
+  to:
+    kind: Service
+    name: racing-game-app-openshift
