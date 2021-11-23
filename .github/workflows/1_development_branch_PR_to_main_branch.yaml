@@ -41,7 +41,7 @@ jobs:
         run:  TAG=$(echo $GITHUB_SHA | head -c7) && sed -i 's|<IMAGE>|${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}/racing-game-app-openshift:'${TAG}'|' $GITHUB_WORKSPACE/deploy-to-openshift.yaml
 
       - name: Update deployment file with image registry secret
-        run: sed -i 's|<REGISTRY_SECRET>|${{ env.QUAY_DOCKER_CONFIIG_JSON_PULL_SECRET}}|' $GITHUB_WORKSPACE/deploy-to-openshift.yaml
+        run: sed -i 's|<REGISTRY_SECRET>|${{ env.QUAY_PULL_SECRET}}|' $GITHUB_WORKSPACE/deploy-to-openshift.yaml
 
       - name: Authenticate and set context
         uses: redhat-actions/oc-login@v1
