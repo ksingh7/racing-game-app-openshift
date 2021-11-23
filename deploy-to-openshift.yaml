@@ -52,7 +52,6 @@ kind: Route
 metadata:
   name: racing-game-app-openshift
 spec: 
-  host: racing-game.apps.sandbox.x8i5.p1.openshiftapps.com
   port:
     targetPort: 8080
   to:
