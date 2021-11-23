@@ -54,7 +54,7 @@ jobs:
         run: oc apply -f deploy-to-openshift.yaml
 
       - name: Get OpenShift Route name
-        run: echo ::set-output name=route_name::$(oc get route gha-python-app -o jsonpath='{.spec.host}')
+        run: echo ::set-output name=route_name::$(oc get route racing-game-app-openshift-o jsonpath='{.spec.host}')
         id: openshift_route_name
 
       - name: Add a comment to PR
@@ -64,5 +64,3 @@ jobs:
           body: |
             Code has been deployed on OpenShift , here is the link to application endpoint http://${{ steps.openshift_route_name.outputs.route_name}}
           reactions: rocket
-
-          
