@@ -5,14 +5,14 @@ on:
     branches:
     - main
 env:
-  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-  QUAY_PULL_SECRET: ${{ secrets.QUAY_PULL_SECRET }}
-  OPENSHIFT_SERVER_URL: ${{ secrets.OPENSHIFT_SERVER_URL }}
+  ENV: "dev"
+  QUAY_DOCKER_USERNAME: ${{ secrets.QUAY_DOCKER_USERNAME }}
+  QUAY_DOCKER_PASSWORD: ${{ secrets.QUAY_DOCKER_PASSWORD }}
+  QUAY_PULL_SECRET: ${{ secrets.QUAY_DOCKER_CONFIIG_JSON_PULL_SECRET}}
+  QUAY_CONTAINER_REGISTRY: ${{ secrets.QUAY_CONTAINER_REGISTRY}} # use "docker.io" for docker hub 
+  OPENSHIFT_SERVER_URL: ${{ secrets.OPENSHIFT_DEV_SERVER_URL}}
   OPENSHIFT_TOKEN: ${{ secrets.OPENSHIFT_DEV_TOKEN }}
   OPENSHIFT_NAMESPACE: ${{ secrets.OPENSHIFT_DEV_NAMESPACE }}
-  REGISTRY_URL: "quay.io" # use "docker.io" for docker hub 
-  ENV: "dev"
 
 jobs:
   pull_request_workflow:
@@ -29,19 +29,19 @@ jobs:
         continue-on-error: true
 
       - name: Build container image
-        run: docker build -t ${{ env.REGISTRY_URL }}/karansingh/racing-game-app-openshift:$(echo $GITHUB_SHA | head -c7) .
+        run: docker build -t ${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}/racing-game-app-openshift:$(echo $GITHUB_SHA | head -c7) .
 
       - name: Docker Login
-        run: docker login -u ${{ env.DOCKER_USERNAME }} -p ${{ env.DOCKER_PASSWORD }} ${{ env.REGISTRY_URL }}
+        run: docker login -u ${{ env.QUAY_DOCKER_USERNAME }} -p ${{ env.QUAY_DOCKER_PASSWORD }} ${{ env.QUAY_CONTAINER_REGISTRY }}
 
       - name: Push image to Docker Hub
-        run: docker push ${{ env.REGISTRY_URL }}/karansingh/racing-game-app-openshift:$(echo $GITHUB_SHA | head -c7)
+        run: docker push ${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}/racing-game-app-openshift:$(echo $GITHUB_SHA | head -c7)
 
       - name: Update deployment file with Image name
-        run:  TAG=$(echo $GITHUB_SHA | head -c7) && sed -i 's|<IMAGE>|${{ env.REGISTRY_URL }}/karansingh/racing-game-app-openshift:'${TAG}'|' $GITHUB_WORKSPACE/deploy-to-openshift.yaml
+        run:  TAG=$(echo $GITHUB_SHA | head -c7) && sed -i 's|<IMAGE>|${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}/racing-game-app-openshift:'${TAG}'|' $GITHUB_WORKSPACE/deploy-to-openshift.yaml
 
       - name: Update deployment file with image registry secret
-        run: sed -i 's|<REGISTRY_SECRET>|${{ env.QUAY_PULL_SECRET }}|' $GITHUB_WORKSPACE/deploy-to-openshift.yaml
+        run: sed -i 's|<REGISTRY_SECRET>|${{ env.QUAY_PULL_SECRET}}|' $GITHUB_WORKSPACE/deploy-to-openshift.yaml
 
       - name: Authenticate and set context
         uses: redhat-actions/oc-login@v1
@@ -57,16 +57,10 @@ jobs:
         run: echo ::set-output name=route_name::$(oc get route racing-game-app-openshift -o jsonpath='{.spec.host}')
         id: openshift_route_name
 
-      - uses: jwalton/gh-find-current-pr@v1
-        id: Get_PR_Number
-        with:
-          # Can be "open", "closed", or "all".  Defaults to "open".
-          state: closed
-
       - name: Add a comment to PR
         uses: peter-evans/create-or-update-comment@v1
         with:
-          issue-number: ${{ steps.Get_PR_Number.outputs.pr }}
+          issue-number: ${{ github.event.pull_request.number }}
           body: |
             Code has been deployed on OpenShift , here is the link to application endpoint http://${{ steps.openshift_route_name.outputs.route_name}}
           reactions: rocket
