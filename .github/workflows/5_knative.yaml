@@ -67,6 +67,7 @@ jobs:
         with:
           service_name: racing-game-app-openshift
           container_image: $CONTAINER_IMAGE_NAME
+          force_create: true
 
       - name: Show Kn Service URL
         run: echo ${{ steps.kn_service_deploy.outputs.service_url }}
