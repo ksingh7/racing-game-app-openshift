@@ -54,7 +54,7 @@ jobs:
       - name: Echo container image name
 #        env: 
 #          CONTAINER_IMAGE_NAME: ${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}/racing-game-app-openshift:$(echo $GITHUB_SHA | head -c7)        
-        run: echo "CONTAINER_IMAGE_NAME=${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}/racing-game-app-openshift:$(echo $GITHUB_SHA | head -c7)"
+        run: echo "CONTAINER_IMAGE_NAME=${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}/racing-game-app-openshift:$(echo $GITHUB_SHA | head -c7)" >> $GITHUB_ENV
 
       - name: test
         run: echo $CONTAINER_IMAGE_NAME
