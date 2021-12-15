@@ -3,7 +3,7 @@ name: Deploy the code coming from Pull Request (before PR merge)
 on:
   pull_request:
     branches:
-    -
+    - demo
 #    - main
 env:
   ENV: "dev"
