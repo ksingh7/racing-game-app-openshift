@@ -49,9 +49,14 @@ jobs:
 #          CONTAINER_IMAGE_NAME: ${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}/racing-game-app-openshift:$(echo $GITHUB_SHA | head -c7)        
         run: echo "CONTAINER_IMAGE_NAME=${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}/racing-game-app-openshift:$(echo $GITHUB_SHA | head -c7)"
 
+      - name: test
+        run: echo $CONTAINER_IMAGE_NAME
+
       - name: Create Knative Service
         id: kn_service_deploy
-        uses: redhat-actions/kn-service-manager@v1    
+        uses: redhat-actions/kn-service-manager@v1
+        env: 
+          CONTAINER_IMAGE_NAME: ${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}/racing-game-app-openshift:$(echo $GITHUB_SHA | head -c7)
         with:
           service_name: racing-game-app-openshift
           container_image: ${{ CONTAINER_IMAGE_NAME }}
