@@ -65,9 +65,9 @@ jobs:
 #        env: 
 #          CONTAINER_IMAGE_NAME: ${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}/racing-game-app-openshift:$(echo $GITHUB_SHA | head -c7)
         with:
-          service_name: racing-game-app-openshif
+          service_name: racing-game-app-openshif-knative
           force_create: true
-          container_image: $CONTAINER_IMAGE_NAME
+          container_image: ${{ CONTAINER_IMAGE_NAME }}
 
       - name: Show Kn Service URL
         run: echo ${{ steps.kn_service_deploy.outputs.service_url }}
