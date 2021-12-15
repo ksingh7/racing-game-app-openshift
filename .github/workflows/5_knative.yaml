@@ -67,7 +67,8 @@ jobs:
         with:
           service_name: racing-game-app-openshif-knative
           force_create: true
-          container_image: ${{ env.CONTAINER_IMAGE_NAME }}
+#          container_image: ${{ env.CONTAINER_IMAGE_NAME }}
+          container_image: "quay.io/karasing/racing-game-app-openshift"
 
       - name: Show Kn Service URL
         run: echo ${{ steps.kn_service_deploy.outputs.service_url }}
