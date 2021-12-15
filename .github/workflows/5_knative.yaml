@@ -28,14 +28,27 @@ jobs:
       - uses: satackey/action-docker-layer-caching@v0.0.11
         continue-on-error: true
 
+#      - name: Build container image
+#        run: docker build -t ${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}/racing-game-app-openshift:$(echo $GITHUB_SHA | head -c7) .
+
       - name: Build container image
-        run: docker build -t ${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}/racing-game-app-openshift:$(echo $GITHUB_SHA | head -c7) .
+        run: docker build -t ${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}/racing-game-app-openshift:latest .
 
-      - name: Docker Login
-        run: docker login -u ${{ env.QUAY_DOCKER_USERNAME }} -p ${{ env.QUAY_DOCKER_PASSWORD }} ${{ env.QUAY_CONTAINER_REGISTRY }}
+#      - name: Docker Login
+#        run: docker login -u ${{ env.QUAY_DOCKER_USERNAME }} -p ${{ env.QUAY_DOCKER_PASSWORD }} ${{ env.QUAY_CONTAINER_REGISTRY }}
 
-      - name: Push image to Quay
-        run: docker push ${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}/racing-game-app-openshift:$(echo $GITHUB_SHA | head -c7)
+#      - name: Push image to Quay
+#        run: docker push ${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}/racing-game-app-openshift:$(echo $GITHUB_SHA | head -c7)
+
+      - name: Push To Quay
+        id: push_tag_to_quay
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          image: racing-game-app-openshift
+          tags: latest
+          registry: ${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}
+          username: ${{ env.QUAY_DOCKER_USERNAME }}
+          password: ${{ env.QUAY_DOCKER_PASSWORD }}
 
       - name: Authenticate and set context
         uses: redhat-actions/oc-login@v1
@@ -51,13 +64,13 @@ jobs:
 #        run: echo ${{ env.QUAY_DOCKER_USERNAME }}
 
 
-      - name: Setting Container Image Name
+#      - name: Setting Container Image Name
 #        env: 
 #          CONTAINER_IMAGE_NAME: ${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}/racing-game-app-openshift:$(echo $GITHUB_SHA | head -c7)        
-        run: echo "CONTAINER_IMAGE_NAME=${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}/racing-game-app-openshift:$(echo $GITHUB_SHA | head -c7)" >> $GITHUB_ENV
+#        run: echo "CONTAINER_IMAGE_NAME=${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}/racing-game-app-openshift:$(echo $GITHUB_SHA | head -c7)" >> $GITHUB_ENV
 
-      - name: test
-        run: echo $CONTAINER_IMAGE_NAME
+#      - name: test
+#        run: echo $CONTAINER_IMAGE_NAME
 
       - name: Create Knative Service
         id: kn_service_deploy
@@ -67,8 +80,9 @@ jobs:
         with:
           service_name: racing-game-app-openshif-knative
           force_create: true
+          container_image: "${{ steps.push_tag_to_quay.outputs.registry-path }}"
 #          container_image: ${{ env.CONTAINER_IMAGE_NAME }}
-          container_image: "quay.io/karasing/racing-game-app-openshift"
+#          container_image: "quay.io/karasing/racing-game-app-openshift"
 
       - name: Show Kn Service URL
         run: echo ${{ steps.kn_service_deploy.outputs.service_url }}
