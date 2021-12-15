@@ -57,10 +57,16 @@ jobs:
         run: echo ::set-output name=route_name::$(oc get route racing-game-app-openshift -o jsonpath='{.spec.host}')
         id: openshift_route_name
 
+      - uses: jwalton/gh-find-current-pr@v1
+        id: Get_PR_Number
+        with:
+          # Can be "open", "closed", or "all".  Defaults to "open".
+          state: closed
+
       - name: Add a comment to PR
         uses: peter-evans/create-or-update-comment@v1
         with:
-          issue-number: ${{ github.event.pull_request.number }}
+          issue-number: ${{ steps.Get_PR_Number.outputs.pr }}
           body: |
             Code has been deployed on OpenShift , here is the link to application endpoint http://${{ steps.openshift_route_name.outputs.route_name}}
           reactions: rocket
