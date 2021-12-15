@@ -44,6 +44,13 @@ jobs:
           openshift_token: ${{ env.OPENSHIFT_TOKEN }}
           namespace: ${{ env.OPENSHIFT_NAMESPACE }}
 
+      - name: registry
+        run: echo ${{ env.QUAY_CONTAINER_REGISTRY }}
+
+      - name: username
+        run: echo ${{ env.QUAY_DOCKER_USERNAME }}
+
+
       - name: Echo container image name
 #        env: 
 #          CONTAINER_IMAGE_NAME: ${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}/racing-game-app-openshift:$(echo $GITHUB_SHA | head -c7)        
