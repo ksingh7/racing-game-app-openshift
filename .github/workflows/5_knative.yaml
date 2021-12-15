@@ -37,11 +37,9 @@ jobs:
       - name: Push image to Docker Hub
         run: docker push ${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}/racing-game-app-openshift:$(echo $GITHUB_SHA | head -c7)
 
-      - name: Update deployment file with Image name
-        run:  TAG=$(echo $GITHUB_SHA | head -c7) && sed -i 's|<IMAGE>|${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}/racing-game-app-openshift:'${TAG}'|' $GITHUB_WORKSPACE/deploy-to-openshift.yaml
-
-      - name: Update deployment file with image registry secret
-        run: sed -i 's|<REGISTRY_SECRET>|${{ env.QUAY_PULL_SECRET}}|' $GITHUB_WORKSPACE/deploy-to-openshift.yaml
+      - name: Set conatiner image name
+        env: 
+          CONTAINER_IMAGE_NAME: ${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}/racing-game-app-openshift:$(echo $GITHUB_SHA | head -c7)
 
       - name: Authenticate and set context
         uses: redhat-actions/oc-login@v1
@@ -55,7 +53,7 @@ jobs:
         uses: redhat-actions/kn-service-manager@v1
         with:
           service_name: racing-game-app-openshift
-          container_image: ${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}/racing-game-app-openshift:$(echo $GITHUB_SHA | head -c7)
+          container_image: ${CONTAINER_IMAGE_NAME }
 
       - name: Show Kn Service URL
         run: echo ${{ steps.kn_service_deploy.outputs.service_url }}
