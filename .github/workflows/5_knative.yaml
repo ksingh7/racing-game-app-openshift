@@ -22,17 +22,28 @@ jobs:
       - name: Checkout main
         uses: actions/checkout@v2
 
-      - name: Update SHA
-        run: echo $GITHUB_SHA > $GITHUB_WORKSPACE/_meta
+#      - name: Update SHA
+#        run: echo $GITHUB_SHA > $GITHUB_WORKSPACE/_meta
 
       - uses: satackey/action-docker-layer-caching@v0.0.11
         continue-on-error: true
 
+      # Build container image using Buildah Action
+      - name: Build Image
+        id: buildah_build
+        uses: redhat-actions/buildah-build@v2
+        with:
+          image: racing-game-app-openshift
+          tags: latest ${{ github.sha }}
+          base-image: ${{ env.BASE_IMAGE }}
+          context: ${{ env.PROJECT_DIR }}
+          dockerfiles: ./Dockerfile
+
 #      - name: Build container image
 #        run: docker build -t ${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}/racing-game-app-openshift:$(echo $GITHUB_SHA | head -c7) .
 
-      - name: Build container image
-        run: docker build -t ${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}/racing-game-app-openshift:latest .
+#      - name: Build container image
+#        run: docker build -t ${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}/racing-game-app-openshift:$(echo $GITHUB_SHA) .
 
 #      - name: Docker Login
 #        run: docker login -u ${{ env.QUAY_DOCKER_USERNAME }} -p ${{ env.QUAY_DOCKER_PASSWORD }} ${{ env.QUAY_CONTAINER_REGISTRY }}
