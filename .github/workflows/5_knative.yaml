@@ -92,6 +92,8 @@ jobs:
           service_name: racing-game-app-openshif-knative
           force_create: true
           container_image: "${{ steps.push_tag_to_quay.outputs.registry-path }}"
+          registry_user: ${{ env.QUAY_DOCKER_USERNAME }}
+          registry_password: ${{ env.QUAY_DOCKER_PASSWORD }}
 #          container_image: ${{ env.CONTAINER_IMAGE_NAME }}
 #          container_image: "quay.io/karasing/racing-game-app-openshift"
 
