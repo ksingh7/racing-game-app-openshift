@@ -34,7 +34,7 @@ jobs:
         uses: redhat-actions/buildah-build@v2
         with:
           image: racing-game-app-openshift
-          tags: latest ${SHORT_SHA}
+          tags: latest ${{ env.SHORT_SHA }}
           base-image: ${{ env.BASE_IMAGE }}
           context: ${{ env.PROJECT_DIR }}
           dockerfiles: ./Dockerfile
@@ -60,7 +60,7 @@ jobs:
         id: kn_service_deploy
         uses: redhat-actions/kn-service-manager@v1
         with:
-          service_name: "racing-game-app-openshif-knative-${SHORT_SHA}"
+          service_name: "racing-game-app-openshif-knative-${{ env.SHORT_SHA }}"
           force_create: false
           container_image: "${{ steps.push_tag_to_quay.outputs.registry-path }}"
           registry_user: ${{ env.QUAY_DOCKER_USERNAME }}
