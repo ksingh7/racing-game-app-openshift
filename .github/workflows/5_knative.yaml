@@ -1,0 +1,79 @@
+name: Deploy the code coming from Pull Request (before PR merge) as Knative serving
+
+on:
+  pull_request:
+    branches:
+    - main
+env:
+  ENV: "dev"
+  QUAY_DOCKER_USERNAME: ${{ secrets.QUAY_DOCKER_USERNAME }}
+  QUAY_DOCKER_PASSWORD: ${{ secrets.QUAY_DOCKER_PASSWORD }}
+  QUAY_PULL_SECRET: ${{ secrets.QUAY_DOCKER_CONFIIG_JSON_PULL_SECRET}}
+  QUAY_CONTAINER_REGISTRY: ${{ secrets.QUAY_CONTAINER_REGISTRY}} # use "docker.io" for docker hub 
+  OPENSHIFT_SERVER_URL: ${{ secrets.OPENSHIFT_DEV_SERVER_URL}}
+  OPENSHIFT_TOKEN: ${{ secrets.OPENSHIFT_DEV_TOKEN }}
+  OPENSHIFT_NAMESPACE: ${{ secrets.OPENSHIFT_DEV_NAMESPACE }}
+
+jobs:
+  pull_request_workflow:
+    name:  Deploy the code coming from Pull Request (before PR merge) as Knative serving
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v2
+
+      - uses: satackey/action-docker-layer-caching@v0.0.11
+        continue-on-error: true
+
+      - name: get SHORT_SHA env property with commit short sha
+        run: echo "SHORT_SHA=$(echo ${GITHUB_SHA} | cut -c1-8)" >> $GITHUB_ENV
+
+      # Build container image using Buildah Action
+      - name: Build Image
+        id: buildah_build
+        uses: redhat-actions/buildah-build@v2
+        with:
+          image: racing-game-app-openshift
+          tags: latest ${{ env.SHORT_SHA }}
+          base-image: ${{ env.BASE_IMAGE }}
+          context: ${{ env.PROJECT_DIR }}
+          dockerfiles: ./Dockerfile
+
+      - name: Push To Quay
+        id: push_tag_to_quay
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          image: racing-game-app-openshift
+          tags: latest
+          registry: ${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}
+          username: ${{ env.QUAY_DOCKER_USERNAME }}
+          password: ${{ env.QUAY_DOCKER_PASSWORD }}
+
+      - name: Login to OpenShift and set context
+        uses: redhat-actions/oc-login@v1
+        with:
+          openshift_server_url: ${{ env.OPENSHIFT_SERVER_URL }}
+          openshift_token: ${{ env.OPENSHIFT_TOKEN }}
+          namespace: ${{ env.OPENSHIFT_NAMESPACE }}
+
+      - name: Create Knative Service
+        id: kn_service_deploy
+        uses: redhat-actions/kn-service-manager@v1
+        with:
+          service_name: "racing-game-app-openshif-knative-${{ env.SHORT_SHA }}"
+          force_create: false
+          container_image: "${{ steps.push_tag_to_quay.outputs.registry-path }}"
+          registry_user: ${{ env.QUAY_DOCKER_USERNAME }}
+          registry_password: ${{ env.QUAY_DOCKER_PASSWORD }}
+
+      - name: Show Kn Service URL
+        run: echo ${{ steps.kn_service_deploy.outputs.service_url }}
+        id: openshift_route_name
+
+      - name: Add a comment to PR
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            Code has been deployed on OpenShift , here is the link to application endpoint ${{ steps.kn_service_deploy.outputs.service_url }}
+          reactions: rocket

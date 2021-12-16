@@ -34,7 +34,7 @@ jobs:
       - name: Docker Login
         run: docker login -u ${{ env.QUAY_DOCKER_USERNAME }} -p ${{ env.QUAY_DOCKER_PASSWORD }} ${{ env.QUAY_CONTAINER_REGISTRY }}
 
-      - name: Push image to Docker Hub
+      - name: Push image to Quay
         run: docker push ${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}/racing-game-app-openshift:$(echo $GITHUB_SHA | head -c7)
 
       - name: Update deployment file with Image name

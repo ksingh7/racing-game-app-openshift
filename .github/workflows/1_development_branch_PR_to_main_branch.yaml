@@ -3,7 +3,8 @@ name: Deploy the code coming from Pull Request (before PR merge)
 on:
   pull_request:
     branches:
-    - main
+    - demo
+#    - main
 env:
   ENV: "dev"
   QUAY_DOCKER_USERNAME: ${{ secrets.QUAY_DOCKER_USERNAME }}
