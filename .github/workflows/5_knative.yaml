@@ -106,5 +106,5 @@ jobs:
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
-            Code has been deployed on OpenShift , here is the link to application endpoint http://${{ steps.openshift_route_name.outputs.route_name}}
+            Code has been deployed on OpenShift , here is the link to application endpoint ${{ steps.kn_service_deploy.outputs.service_url }}
           reactions: rocket
