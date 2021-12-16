@@ -57,8 +57,8 @@ jobs:
         id: kn_service_deploy
         uses: redhat-actions/kn-service-manager@v1
         with:
-          service_name: racing-game-app-openshif-knative
-          force_create: true
+          service_name: "racing-game-app-openshif-knative-${{ github.sha }}"
+          force_create: false
           container_image: "${{ steps.push_tag_to_quay.outputs.registry-path }}"
           registry_user: ${{ env.QUAY_DOCKER_USERNAME }}
           registry_password: ${{ env.QUAY_DOCKER_PASSWORD }}
