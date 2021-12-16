@@ -25,13 +25,16 @@ jobs:
       - uses: satackey/action-docker-layer-caching@v0.0.11
         continue-on-error: true
 
+      - name: get SHORT_SHA env property with commit short sha
+        run: echo "SHORT_SHA=$(echo ${GITHUB_SHA} | cut -c1-8)" >> $GITHUB_ENV
+
       # Build container image using Buildah Action
       - name: Build Image
         id: buildah_build
         uses: redhat-actions/buildah-build@v2
         with:
           image: racing-game-app-openshift
-          tags: latest ${{ github.sha }}
+          tags: latest ${SHORT_SHA}
           base-image: ${{ env.BASE_IMAGE }}
           context: ${{ env.PROJECT_DIR }}
           dockerfiles: ./Dockerfile
@@ -57,7 +60,7 @@ jobs:
         id: kn_service_deploy
         uses: redhat-actions/kn-service-manager@v1
         with:
-          service_name: "racing-game-app-openshif-knative-${{ github.sha }}"
+          service_name: "racing-game-app-openshif-knative-${SHORT_SHA}"
           force_create: false
           container_image: "${{ steps.push_tag_to_quay.outputs.registry-path }}"
           registry_user: ${{ env.QUAY_DOCKER_USERNAME }}
