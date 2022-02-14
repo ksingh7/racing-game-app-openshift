@@ -56,11 +56,12 @@ jobs:
           openshift_token: ${{ env.OPENSHIFT_TOKEN }}
           namespace: ${{ env.OPENSHIFT_NAMESPACE }}
 
+        #service_name: "racing-game-app-openshif-knative-${{ env.SHORT_SHA }}"
       - name: Create Knative Service
         id: kn_service_deploy
         uses: redhat-actions/kn-service-manager@v1
         with:
-          service_name: "racing-game-app-openshif-knative-${{ env.SHORT_SHA }}"
+          service_name: "racing-game-app-openshif-knative"
           force_create: true
           container_image: "${{ steps.push_tag_to_quay.outputs.registry-path }}"
           registry_user: ${{ env.QUAY_DOCKER_USERNAME }}
