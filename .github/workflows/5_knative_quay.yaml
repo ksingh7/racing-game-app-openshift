@@ -1,9 +1,9 @@
 name: Deploy the code coming from Pull Request (before PR merge) as Knative serving
 
-on:
-  pull_request:
-    branches:
-    - dev
+#on:
+#  pull_request:
+#    branches:
+#    - dev
 env:
   ENV: "dev"
   QUAY_DOCKER_USERNAME: ${{ secrets.QUAY_DOCKER_USERNAME }}

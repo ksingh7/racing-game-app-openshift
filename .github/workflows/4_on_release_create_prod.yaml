@@ -6,10 +6,10 @@ on:
     - created
 env:
   ENV: "prod"
-  QUAY_DOCKER_USERNAME: ${{ secrets.QUAY_DOCKER_USERNAME }}
-  QUAY_DOCKER_PASSWORD: ${{ secrets.QUAY_DOCKER_PASSWORD }}
-  QUAY_PULL_SECRET: ${{ secrets.QUAY_DOCKER_CONFIIG_JSON_PULL_SECRET}}
-  QUAY_CONTAINER_REGISTRY: ${{ secrets.QUAY_CONTAINER_REGISTRY}} # use "docker.io" for docker hub 
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+  CONTAINER_REGISTRY_PULL_SECRET: ${{ secrets.QUAY_DOCKER_CONFIG_JSON_PULL_SECRET}}
+  CONTAINER_REGISTRY: ${{ secrets.CONTAINER_REGISTRY}} # use "docker.io" for docker hub 
   OPENSHIFT_SERVER_URL: ${{ secrets.OPENSHIFT_DEV_SERVER_URL}}
   OPENSHIFT_TOKEN: ${{ secrets.OPENSHIFT_DEV_TOKEN }}
   OPENSHIFT_NAMESPACE: ${{ secrets.OPENSHIFT_DEV_NAMESPACE }}
@@ -29,19 +29,19 @@ jobs:
         continue-on-error: true
 
       - name: Build container image
-        run: docker build -t ${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}/racing-game-app-openshift:$(echo $GITHUB_SHA | head -c7) .
+        run: docker build -t ${{ env.CONTAINER_REGISTRY }}/${{ env.DOCKER_USERNAME }}/racing-game-app:$(echo $GITHUB_SHA | head -c7) .
 
       - name: Docker Login
-        run: docker login -u ${{ env.QUAY_DOCKER_USERNAME }} -p ${{ env.QUAY_DOCKER_PASSWORD }} ${{ env.QUAY_CONTAINER_REGISTRY }}
+        run: docker login -u ${{ env.DOCKER_USERNAME }} -p ${{ env.DOCKER_PASSWORD }} ${{ env.CONTAINER_REGISTRY }}
 
       - name: Push image to Docker Hub
-        run: docker push ${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}/racing-game-app-openshift:$(echo $GITHUB_SHA | head -c7)
+        run: docker push ${{ env.CONTAINER_REGISTRY }}/${{ env.DOCKER_USERNAME }}/racing-game-app:$(echo $GITHUB_SHA | head -c7)
 
       - name: Update deployment file with Image name
-        run:  TAG=$(echo $GITHUB_SHA | head -c7) && sed -i 's|<IMAGE>|${{ env.QUAY_CONTAINER_REGISTRY }}/${{ env.QUAY_DOCKER_USERNAME }}/racing-game-app-openshift:'${TAG}'|' $GITHUB_WORKSPACE/deploy-to-openshift.yaml
+        run:  TAG=$(echo $GITHUB_SHA | head -c7) && sed -i 's|<IMAGE>|${{ env.CONTAINER_REGISTRY }}/${{ env.DOCKER_USERNAME }}/racing-game-app:'${TAG}'|' $GITHUB_WORKSPACE/openshift/deploy-to-openshift.yaml
 
       - name: Update deployment file with image registry secret
-        run: sed -i 's|<REGISTRY_SECRET>|${{ env.QUAY_PULL_SECRET}}|' $GITHUB_WORKSPACE/deploy-to-openshift.yaml
+        run: sed -i 's|<REGISTRY_SECRET>|${{ env.CONTAINER_REGISTRY_PULL_SECRET}}|' $GITHUB_WORKSPACE/openshift/deploy-to-openshift.yaml
 
       - name: Authenticate and set context
         uses: redhat-actions/oc-login@v1
@@ -51,4 +51,4 @@ jobs:
           namespace: ${{ env.OPENSHIFT_NAMESPACE }}
 
       - name: Deploy to openshift
-        run: oc apply -f deploy-to-openshift.yaml
+        run: oc apply -f openshift/deploy-to-openshift.yaml
